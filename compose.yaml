@@ -1,28 +1,24 @@
 services:
   backend:
     build: "./backend"
-    container_name: alchemy-backend
     ports:
       - "8080:8080"
     env_file:
       - "./backend/.env"
     depends_on:
-      - db
-    restart: always
+      - fullmetal-alchemist-db
 
-  db:
+  fullmetal-alchemist-db:
     image: mysql:8.3
-    container_name: alchemy-db
-    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: amestris
+      MYSQL_DATABASE: fullmetal_alchemist
       MYSQL_USER: alchemist
       MYSQL_PASSWORD: secret
     ports:
       - "3307:3306"
     volumes:
-      - db_data:/var/lib/mysql
+      - fullmetal-alchemist-mysql-data:/var/lib/mysql
 
 volumes:
-  db_data:
+  fullmetal-alchemist-mysql-data:

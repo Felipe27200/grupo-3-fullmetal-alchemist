@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"alchemy-system/backend/controllers"
 	"alchemy-system/backend/database"
 
 	"github.com/gorilla/mux"
@@ -13,24 +14,26 @@ import (
 )
 
 func main() {
-	// Load .env
 	if err := godotenv.Load(); err != nil {
-		log.Println(".env file not found, using system environment variables")
+		log.Println("No .env file found, using system environment variables")
 	}
 
-	// Connect to database (creates tables automatically)
 	database.ConnectDatabase()
 
-	// Basic route
 	r := mux.NewRouter()
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Alchemy API is running and database is ready!")
-	})
+
+	api := r.PathPrefix("/api").Subrouter()
+	api.HandleFunc("/alchemists", controllers.GetAllAlchemists).Methods("GET")
+	api.HandleFunc("/alchemists/{id}", controllers.GetAlchemistByID).Methods("GET")
+	api.HandleFunc("/alchemists", controllers.CreateAlchemist).Methods("POST")
+	api.HandleFunc("/alchemists/{id}", controllers.UpdateAlchemist).Methods("PUT")
+	api.HandleFunc("/alchemists/{id}", controllers.DeleteAlchemist).Methods("DELETE")
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	log.Printf("Server running on port %s", port)
+
+	fmt.Printf("Server running on port %s\n", port)
 	http.ListenAndServe(":"+port, r)
 }

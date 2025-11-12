@@ -10,6 +10,7 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -27,9 +28,11 @@ func ConnectDatabase() {
 	var db *gorm.DB
 	var err error
 
-	// Retry logic to allow MySQL container to start
+	// Retry logic to wait for MySQL container
 	for i := 1; i <= 10; i++ {
-		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info), //  enable SQL logging
+		})
 		if err == nil {
 			break
 		}
@@ -41,6 +44,7 @@ func ConnectDatabase() {
 		log.Fatalf("Could not connect to MySQL: %v", err)
 	}
 
+	// Run AutoMigrate for all models
 	err = db.AutoMigrate(
 		&models.Alchemist{},
 		&models.Mission{},
@@ -52,6 +56,11 @@ func ConnectDatabase() {
 		log.Fatalf("Error during AutoMigrate: %v", err)
 	}
 
+	// Check how many records exist for sanity
+	var count int64
+	db.Table("alchemists").Count(&count)
+	log.Printf("Found %d alchemists in database '%s'\n", count, name)
+
 	DB = db
-	log.Println("Connected to MySQL and migrated tables successfully.")
+	log.Println(" Connected to MySQL and migrated tables successfully.")
 }
