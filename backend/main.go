@@ -23,11 +23,18 @@ func main() {
 	r := mux.NewRouter()
 
 	api := r.PathPrefix("/api").Subrouter()
+
 	api.HandleFunc("/alchemists", controllers.GetAllAlchemists).Methods("GET")
 	api.HandleFunc("/alchemists/{id}", controllers.GetAlchemistByID).Methods("GET")
 	api.HandleFunc("/alchemists", controllers.CreateAlchemist).Methods("POST")
 	api.HandleFunc("/alchemists/{id}", controllers.UpdateAlchemist).Methods("PUT")
 	api.HandleFunc("/alchemists/{id}", controllers.DeleteAlchemist).Methods("DELETE")
+
+	api.HandleFunc("/missions", controllers.GetAllMissions).Methods("GET")
+	api.HandleFunc("/missions/{id}", controllers.GetMissionByID).Methods("GET")
+	api.HandleFunc("/missions", controllers.CreateMission).Methods("POST")
+	api.HandleFunc("/missions/{id}", controllers.UpdateMission).Methods("PUT")
+	api.HandleFunc("/missions/{id}", controllers.DeleteMission).Methods("DELETE")
 
 	port := os.Getenv("PORT")
 	if port == "" {
