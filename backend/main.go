@@ -36,6 +36,12 @@ func main() {
 	api.HandleFunc("/missions/{id}", controllers.UpdateMission).Methods("PUT")
 	api.HandleFunc("/missions/{id}", controllers.DeleteMission).Methods("DELETE")
 
+	api.HandleFunc("/transmutations", controllers.GetAllTransmutations).Methods("GET")
+	api.HandleFunc("/transmutations/{id}", controllers.GetTransmutationByID).Methods("GET")
+	api.HandleFunc("/transmutations", controllers.CreateTransmutation).Methods("POST")
+	api.HandleFunc("/transmutations/{id}", controllers.UpdateTransmutation).Methods("PUT")
+	api.HandleFunc("/transmutations/{id}", controllers.DeleteTransmutation).Methods("DELETE")
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
