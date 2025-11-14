@@ -1,8 +1,8 @@
 package services
 
 import (
-	"alchemy-system/backend/database"
-	"alchemy-system/backend/models"
+	"alchemy-system/database"
+    "alchemy-system/models"
 	"errors"
 	"gorm.io/gorm"
 )

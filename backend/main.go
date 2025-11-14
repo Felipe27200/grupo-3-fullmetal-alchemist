@@ -1,13 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
-	"alchemy-system/backend/controllers"
-	"alchemy-system/backend/database"
+	"alchemy-system/controllers"
+	"alchemy-system/database"
+	"alchemy-system/middleware"
+
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -24,32 +27,70 @@ func main() {
 
 	api := r.PathPrefix("/api").Subrouter()
 
-	api.HandleFunc("/alchemists", controllers.GetAllAlchemists).Methods("GET")
-	api.HandleFunc("/alchemists/{id}", controllers.GetAlchemistByID).Methods("GET")
-	api.HandleFunc("/alchemists", controllers.CreateAlchemist).Methods("POST")
-	api.HandleFunc("/alchemists/{id}", controllers.UpdateAlchemist).Methods("PUT")
-	api.HandleFunc("/alchemists/{id}", controllers.DeleteAlchemist).Methods("DELETE")
+	//-------------------------------------------------------
+	// AUTH (Público)
+	//-------------------------------------------------------
+	api.HandleFunc("/auth/register", controllers.Register).Methods("POST")
+	api.HandleFunc("/auth/login", controllers.Login).Methods("POST")
 
-	api.HandleFunc("/missions", controllers.GetAllMissions).Methods("GET")
-	api.HandleFunc("/missions/{id}", controllers.GetMissionByID).Methods("GET")
-	api.HandleFunc("/missions", controllers.CreateMission).Methods("POST")
-	api.HandleFunc("/missions/{id}", controllers.UpdateMission).Methods("PUT")
-	api.HandleFunc("/missions/{id}", controllers.DeleteMission).Methods("DELETE")
+	//-------------------------------------------------------
+	// Rutas protegidas con JWT
+	//-------------------------------------------------------
+	protected := api.PathPrefix("").Subrouter()
+	protected.Use(middleware.JWTMiddleware) // ← CORRECTO
 
-	api.HandleFunc("/transmutations", controllers.GetAllTransmutations).Methods("GET")
-	api.HandleFunc("/transmutations/{id}", controllers.GetTransmutationByID).Methods("GET")
-	api.HandleFunc("/transmutations", controllers.CreateTransmutation).Methods("POST")
-	api.HandleFunc("/transmutations/{id}", controllers.UpdateTransmutation).Methods("PUT")
-	api.HandleFunc("/transmutations/{id}", controllers.DeleteTransmutation).Methods("DELETE")
-	
-	api.HandleFunc("/materials", controllers.GetAllMaterials).Methods("GET")
-	api.HandleFunc("/materials/{id}", controllers.GetMaterialByID).Methods("GET")
-	api.HandleFunc("/materials", controllers.CreateMaterial).Methods("POST")
-	api.HandleFunc("/materials/{id}", controllers.UpdateMaterial).Methods("PUT")
-	api.HandleFunc("/materials/{id}", controllers.DeleteMaterial).Methods("DELETE")
+	// Ruta de prueba
+	protected.Handle("/test/auth", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID := r.Context().Value("userID").(uint)
+		role := r.Context().Value("role").(string)
 
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{
+			"user_id": userID,
+			"role":    role,
+			"status":  "middleware OK",
+		})
+	})).Methods("GET")
 
+	//-------------------------------------------------------
+	// Alchemists (protegido)
+	//-------------------------------------------------------
+	protected.HandleFunc("/alchemists", controllers.GetAllAlchemists).Methods("GET")
+	protected.HandleFunc("/alchemists/{id}", controllers.GetAlchemistByID).Methods("GET")
+	protected.HandleFunc("/alchemists", controllers.CreateAlchemist).Methods("POST")
+	protected.HandleFunc("/alchemists/{id}", controllers.UpdateAlchemist).Methods("PUT")
+	protected.HandleFunc("/alchemists/{id}", controllers.DeleteAlchemist).Methods("DELETE")
 
+	//-------------------------------------------------------
+	// Missions (protegido)
+	//-------------------------------------------------------
+	protected.HandleFunc("/missions", controllers.GetAllMissions).Methods("GET")
+	protected.HandleFunc("/missions/{id}", controllers.GetMissionByID).Methods("GET")
+	protected.HandleFunc("/missions", controllers.CreateMission).Methods("POST")
+	protected.HandleFunc("/missions/{id}", controllers.UpdateMission).Methods("PUT")
+	protected.HandleFunc("/missions/{id}", controllers.DeleteMission).Methods("DELETE")
+
+	//-------------------------------------------------------
+	// Transmutations (protegido)
+	//-------------------------------------------------------
+	protected.HandleFunc("/transmutations", controllers.GetAllTransmutations).Methods("GET")
+	protected.HandleFunc("/transmutations/{id}", controllers.GetTransmutationByID).Methods("GET")
+	protected.HandleFunc("/transmutations", controllers.CreateTransmutation).Methods("POST")
+	protected.HandleFunc("/transmutations/{id}", controllers.UpdateTransmutation).Methods("PUT")
+	protected.HandleFunc("/transmutations/{id}", controllers.DeleteTransmutation).Methods("DELETE")
+
+	//-------------------------------------------------------
+	// Materials (protegido)
+	//-------------------------------------------------------
+	protected.HandleFunc("/materials", controllers.GetAllMaterials).Methods("GET")
+	protected.HandleFunc("/materials/{id}", controllers.GetMaterialByID).Methods("GET")
+	protected.HandleFunc("/materials", controllers.CreateMaterial).Methods("POST")
+	protected.HandleFunc("/materials/{id}", controllers.UpdateMaterial).Methods("PUT")
+	protected.HandleFunc("/materials/{id}", controllers.DeleteMaterial).Methods("DELETE")
+
+	//-------------------------------------------------------
+	// Server START
+	//-------------------------------------------------------
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

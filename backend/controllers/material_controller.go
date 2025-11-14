@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"alchemy-system/backend/models"
-	"alchemy-system/backend/services"
+	"alchemy-system/models"
+    "alchemy-system/services"
 
 	"github.com/gorilla/mux"
 )

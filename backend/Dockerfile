@@ -1,24 +1,31 @@
-# Backend Dockerfile
+# ---------- BUILD STAGE ----------
 FROM golang:1.25.4-alpine AS build
 
 WORKDIR /app
 
-# Copy go files
+# Copiamos primero dependencias del módulo
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source
+# Ahora copiamos todo el backend (SOLAMENTE el backend)
 COPY . .
 
-# Build the Go binary
-RUN go build -o main .
+# Construimos el binario del backend
+RUN go build -o server main.go
 
-# Run stage
+# ---------- RUN STAGE ----------
 FROM alpine:latest
+
 WORKDIR /app
 
-COPY --from=build /app/main .
-COPY .env .
+RUN apk add --no-cache ca-certificates
+
+# Copiar binario compilado
+COPY --from=build /app/server .
+
+# Copiar env del backend
+COPY .env . 
 
 EXPOSE 8080
-CMD ["./main"]
+
+CMD ["./server"]

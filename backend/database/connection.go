@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"alchemy-system/backend/models"
+	"alchemy-system/models"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"

@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"alchemy-system/backend/models"
-	"alchemy-system/backend/services"
+	 "alchemy-system/models"
+    "alchemy-system/services"
 	"encoding/json"
 	"net/http"
 	"strconv"
