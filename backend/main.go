@@ -41,6 +41,14 @@ func main() {
 	api.HandleFunc("/transmutations", controllers.CreateTransmutation).Methods("POST")
 	api.HandleFunc("/transmutations/{id}", controllers.UpdateTransmutation).Methods("PUT")
 	api.HandleFunc("/transmutations/{id}", controllers.DeleteTransmutation).Methods("DELETE")
+	
+	api.HandleFunc("/materials", controllers.GetAllMaterials).Methods("GET")
+	api.HandleFunc("/materials/{id}", controllers.GetMaterialByID).Methods("GET")
+	api.HandleFunc("/materials", controllers.CreateMaterial).Methods("POST")
+	api.HandleFunc("/materials/{id}", controllers.UpdateMaterial).Methods("PUT")
+	api.HandleFunc("/materials/{id}", controllers.DeleteMaterial).Methods("DELETE")
+
+
 
 	port := os.Getenv("PORT")
 	if port == "" {
