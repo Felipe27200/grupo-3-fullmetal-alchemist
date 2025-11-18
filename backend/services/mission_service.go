@@ -2,47 +2,52 @@ package services
 
 import (
 	"alchemy-system/database"
-    "alchemy-system/models"
+	"alchemy-system/models"
 	"errors"
 
 	"gorm.io/gorm"
 )
 
-// CreateMission inserts a new mission into the database
 func CreateMission(mission models.Mission) (models.Mission, error) {
-	result := database.DB.Create(&mission)
-	if result.Error != nil {
-		return mission, result.Error
+	if err := database.DB.Create(&mission).Error; err != nil {
+		return mission, err
 	}
 
-	// Reload related alchemist
 	if err := database.DB.Preload("Alchemist").First(&mission, mission.ID).Error; err != nil {
 		return mission, err
 	}
 
+	// Auditoría: misión creada
+	CreateAudit(models.Audit{
+		Action:   "CREATE",
+		Entity:   "mission",
+		EntityID: mission.ID,
+		Message:  "Mission created",
+	})
+
 	return mission, nil
 }
 
-// GetAllMissions retrieves all missions from the database
 func GetAllMissions() ([]models.Mission, error) {
 	var missions []models.Mission
-	result := database.DB.Preload("Alchemist").Find(&missions)
-	return missions, result.Error
+	err := database.DB.Preload("Alchemist").Find(&missions).Error
+	return missions, err
 }
 
-// GetMissionByID retrieves a single mission by ID
 func GetMissionByID(id uint) (models.Mission, error) {
 	var mission models.Mission
-	result := database.DB.Preload("Alchemist").First(&mission, id)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+
+	err := database.DB.Preload("Alchemist").First(&mission, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return mission, errors.New("mission not found")
 	}
-	return mission, result.Error
+
+	return mission, err
 }
 
-// UpdateMission updates an existing mission by ID
 func UpdateMission(id uint, updated models.Mission) (models.Mission, error) {
 	var mission models.Mission
+
 	if err := database.DB.First(&mission, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return mission, errors.New("mission not found")
@@ -59,22 +64,43 @@ func UpdateMission(id uint, updated models.Mission) (models.Mission, error) {
 		return mission, err
 	}
 
-	// Reload mission with its related Alchemist
 	if err := database.DB.Preload("Alchemist").First(&mission, mission.ID).Error; err != nil {
 		return mission, err
 	}
 
+	// Auditoría: misión actualizada
+	CreateAudit(models.Audit{
+		Action:   "UPDATE",
+		Entity:   "mission",
+		EntityID: mission.ID,
+		Message:  "Mission updated",
+	})
+
 	return mission, nil
 }
 
-// DeleteMission removes a mission by ID
 func DeleteMission(id uint) error {
 	var mission models.Mission
-	if err := database.DB.First(&mission, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("mission not found")
-		}
+
+	err := database.DB.First(&mission, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New("mission not found")
+	}
+	if err != nil {
 		return err
 	}
-	return database.DB.Delete(&mission).Error
+
+	if err := database.DB.Delete(&mission).Error; err != nil {
+		return err
+	}
+
+	// Auditoría: misión eliminada
+	CreateAudit(models.Audit{
+		Action:   "DELETE",
+		Entity:   "mission",
+		EntityID: id,
+		Message:  "Mission deleted",
+	})
+
+	return nil
 }

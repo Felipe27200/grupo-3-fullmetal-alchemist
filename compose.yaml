@@ -1,15 +1,23 @@
+version: "3.9"
+
 services:
   backend:
     build: "./backend"
+    container_name: fullmetal-backend
     ports:
       - "8080:8080"
     env_file:
       - "./backend/.env"
     depends_on:
       - fullmetal-alchemist-db
+      - redis
+    networks:
+      - alchemy-net
 
   fullmetal-alchemist-db:
     image: mysql:8.3
+    container_name: fullmetal-alchemist-db
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: fullmetal_alchemist
@@ -19,6 +27,20 @@ services:
       - "3307:3306"
     volumes:
       - fullmetal-alchemist-mysql-data:/var/lib/mysql
+    networks:
+      - alchemy-net
+
+  redis:
+    image: redis:latest
+    container_name: alchemy-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - alchemy-net
 
 volumes:
   fullmetal-alchemist-mysql-data:
+
+networks:
+  alchemy-net:
